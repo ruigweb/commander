@@ -1,0 +1,19 @@
+{
+    "name": "ruigweb/commander",
+    "type": "project",
+    "description": "Magical Commander of your awesome CLI commands.",
+    "keywords": ["ruigweb", "commander", "package"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.0.2"
+    },
+    "require-dev": {
+    },
+    "bin": ["bin/commander"],
+    "autoload": {
+        "psr-4": {
+            "Keeper\\": "src/Commander"
+        },
+        "files": ["src/helpers.php"]
+    }
+}
