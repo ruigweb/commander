@@ -12,7 +12,7 @@
     "bin": ["bin/commander"],
     "autoload": {
         "psr-4": {
-            "Keeper\\": "src/Commander"
+            "Ruigweb\\Commander\\": "src/Commander"
         },
         "files": ["src/helpers.php"]
     }
