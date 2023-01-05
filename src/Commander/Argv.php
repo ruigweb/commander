@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Ruigweb\Commander;
 
+use Closure;
 use ArrayObject;
+use Exception;
 use InvalidArgumentException;
 use Ruigweb\Commander\Command\Argument;
+use Ruigweb\Commander\Command\Option;
 
 class Argv extends ArrayObject
 {
@@ -19,21 +22,29 @@ class Argv extends ArrayObject
         parent::__construct($argv);
     }
 
+    public function each(Closure $callback) 
+    {
+        foreach ($this as $argument) {
+            $callback($argument);
+        }
+
+        return $this;
+    }
+
     public function append($value): void
     {
-        $this->validate($value);
-        parent::append($value);
+        throw new Exception('Argv is immutable');
     }
 
     public function offsetSet($key, $value): void
     {
-        $this->validate($value);
-        parent::offsetSet($key, $value);
+        throw new Exception('Argv is immutable');
     }
 
     protected function validate($value): void
     {
-        if (!$value instanceof Argument) {
+        if (!$value instanceof Option && !$value instanceof Argument) {
+            var_dump(get_class($value));
             throw new InvalidArgumentException;
         }
     }

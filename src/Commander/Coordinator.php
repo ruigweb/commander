@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ruigweb\Commander;
 
+use ArrayObject;
 use InvalidArgumentException;
 use Ruigweb\Commander\Command;
 use Ruigweb\Commander\Command\Argument;
@@ -14,9 +15,10 @@ class Coordinator
     const DEFAULT = '__DEFAULT__';
 
     protected string $commander;
-    protected $commands = [];
-
     protected static $commanders = [
+        Coordinator::DEFAULT => []
+    ];
+    protected static $resolvers = [
         Coordinator::DEFAULT => []
     ];
 
@@ -25,9 +27,15 @@ class Coordinator
         $this->on($commander);
     }
 
+    public function resolver(callable|Command $handler) : Coordinator
+    {
+        self::$resolvers[$this->commander] = $handler;
+        return $this;
+    }
+
     public function register(Command $command) : Coordinator
     {
-        array_push($this->commands, $command);
+        array_push(self::$commanders[$this->commander], $command);
         return $this;
     }
 
@@ -42,14 +50,31 @@ class Coordinator
         return $this;
     }
 
-    public function ingest(array $argv)
+    public function ingest(array $argv) : Command
     {
-        $loc = array_shift($argv);
+        $command = null;
+        array_shift($argv);
         if (count($argv) > 0) {
-            $command = array_shift($argv);
-            if ($command === '-h' || $command === '--help') {
-                return 
+            if ($argv[0] === '-h' || $argv[0] === '--help') {
+                $command = $this->help();
             }
+
+            if (count(self::$commanders[$this->commander]) === 0) {
+                if (!empty(self::$resolvers[$this->commander])) {
+                    // resolve the commander itself to a command
+                }
+            } else {
+                if ($this->exists($argv[0])) {
+                    $command = $this->get($argv[0]);
+                }
+            }
+        } elseif (!empty(self::$resolvers[$this->commander])) {
+            // resolve the commander itself to a command
+        }
+
+        if ($command instanceof Command) {
+            $command->take(...$argv);
+            return $command;
         }
 
         throw new InvalidArgumentException;
@@ -57,27 +82,25 @@ class Coordinator
 
     public function __get(string $command)
     {
-        if ($this->exists($command)) {
-            return $this->commands[$this->commander][$command];
-        }
+        return $this->get($command);
     }
 
     public function exists(string $command)
     {
-        return array_key_exists($command, $this->commands[$this->commander]);
+        return in_array($command, array_column(self::$commanders[$this->commander], 'name'));
     }
 
     public function all(): array
     {
-        return $this->commands[$this->commander];
+        return self::$commanders[$this->commander];
     }
 
     public function list()
     {
-        return array_keys($this->commands[$this->commander]);
+        return array_keys(self::$commanders[$this->commander]);
     }
 
-    public function help(string $command = null) : ?string
+    public function help(string $command = null) : ?Help
     {
         if (!empty($command)) {
             if ($this->exists($command)) {
@@ -86,10 +109,10 @@ class Coordinator
         } else {
             $argv = new Argv;
             foreach ($this->all() as $command) {
-                (new Argument(mb_strtoupper($command->name()).'_HELP'))->help($command->help());
+                (new Argument($command->name()))->help($command->usage(true));
             }
-
-            return Help(new Command('COMMANDER_HELP', $argv));
+            
+            return new Help(new Command('Commander', $argv));
         }
 
         return null;
@@ -98,7 +121,9 @@ class Coordinator
     public function get(string $command) : Command
     {
         if ($this->exists($command)) {
-            return $this->commands[$this->commander][$command];
+            return self::$commanders[$this->commander][
+                array_search($command, array_column(self::$commanders[$this->commander], 'name'))
+            ];
         }
 
         throw new InvalidArgumentException;

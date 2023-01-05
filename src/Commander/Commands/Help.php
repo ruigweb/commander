@@ -25,15 +25,15 @@ class Help extends Command
 
     public function on(Command $command)
     {
-        $this->command = null;
+        $this->command = $command;
     }
 
-    public function run(...$args)
+    public function run(Argv $argv = null)
     {
         if (empty($this->command)) {
             throw new InvalidArgumentException;
         }
         
-        echo 'HELP';
+        echo $this->command->usage();
     }
 }

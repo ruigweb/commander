@@ -1,6 +1,6 @@
 <?php
 
-namespace Ruigweb\Commander\Command\Option;
+namespace Ruigweb\Commander\Command;
 
 enum Type: string
 {
