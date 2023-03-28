@@ -28,12 +28,14 @@ class Help extends Command
         $this->command = $command;
     }
 
-    public function run(Argv $argv = null)
+    public function run(Argv $argv = null) : ?string
     {
         if (empty($this->command)) {
             throw new InvalidArgumentException;
         }
         
-        echo $this->command->usage();
+        $output = $this->command->usage();
+
+        return $output;
     }
 }

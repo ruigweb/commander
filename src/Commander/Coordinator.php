@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Ruigweb\Commander;
 
-use ArrayObject;
 use InvalidArgumentException;
 use Ruigweb\Commander\Command;
 use Ruigweb\Commander\Command\Argument;
@@ -16,10 +15,8 @@ class Coordinator
 
     protected string $commander;
     protected static $commanders = [
-        Coordinator::DEFAULT => []
     ];
     protected static $resolvers = [
-        Coordinator::DEFAULT => []
     ];
 
     public function __construct(string $commander = Coordinator::DEFAULT)
@@ -27,15 +24,39 @@ class Coordinator
         $this->on($commander);
     }
 
-    public function resolver(callable|Command $handler) : Coordinator
+    public function name() : string
     {
-        self::$resolvers[$this->commander] = $handler;
+        return $this->commander;
+    }
+
+    public function commanders() : array
+    {
+        return array_keys(self::$commanders);
+    }
+
+    public function resolvers() : array
+    {
+        return self::$resolvers;
+    }
+
+
+    public function resolver(callable|Command $handler, Argv $argv = new Argv) : Coordinator
+    {
+        self::$resolvers[$this->commander] = [
+            'handler' => $handler,
+            'argv'    => $argv,
+        ];
         return $this;
     }
 
     public function register(Command $command) : Coordinator
     {
-        array_push(self::$commanders[$this->commander], $command);
+        if (!in_array($command->name(), $this->list())) {
+            array_push(self::$commanders[$this->commander], $command);
+        } else {
+            throw new InvalidArgumentException;
+        }
+
         return $this;
     }
 
@@ -50,31 +71,44 @@ class Coordinator
         return $this;
     }
 
-    public function ingest(array $argv) : Command
+    public function ingest(array $argv = []) : Command
     {
         $command = null;
         array_shift($argv);
         if (count($argv) > 0) {
+            // /$--?h(elp)?^/
             if ($argv[0] === '-h' || $argv[0] === '--help') {
                 $command = $this->help();
             }
 
             if (count(self::$commanders[$this->commander]) === 0) {
-                if (!empty(self::$resolvers[$this->commander])) {
+                if (array_key_exists($this->commander, $this->resolvers())) {
                     // resolve the commander itself to a command
+                    $command = $this->getCommandFromResolver($this->commander);
                 }
             } else {
                 if ($this->exists($argv[0])) {
                     $command = $this->get($argv[0]);
                 }
             }
-        } elseif (!empty(self::$resolvers[$this->commander])) {
+        } elseif (array_key_exists($this->commander, $this->resolvers())) {
             // resolve the commander itself to a command
+            $command = $this->getCommandFromResolver($this->commander);
         }
-
+        
         if ($command instanceof Command) {
+            array_shift($argv);
             $command->take(...$argv);
             return $command;
+        }
+        
+        throw new InvalidArgumentException;
+    }
+
+    protected function getCommandFromResolver(string $commander) : Command
+    {
+        if (!empty(self::$resolvers[$commander])) {
+            return new Command($this->commander.':RESOLVER', self::$resolvers[$this->commander]['argv'], 'Resolver of '.$this->commander.' Commander', self::$resolvers[$this->commander]['handler']);
         }
 
         throw new InvalidArgumentException;
@@ -87,7 +121,7 @@ class Coordinator
 
     public function exists(string $command)
     {
-        return in_array($command, array_column(self::$commanders[$this->commander], 'name'));
+        return in_array($command, $this->list());
     }
 
     public function all(): array
@@ -95,9 +129,9 @@ class Coordinator
         return self::$commanders[$this->commander];
     }
 
-    public function list()
+    public function list() : array
     {
-        return array_keys(self::$commanders[$this->commander]);
+        return array_column(self::$commanders[$this->commander], 'name');
     }
 
     public function help(string $command = null) : ?Help
@@ -135,10 +169,27 @@ class Coordinator
             $command = $this->get($command);
         }
 
-        if ($command instanceof Command) {
-            return $command(...$args);
+        return $command(...$args);
+    }
+
+    public function purge(string $commander = null) : array
+    {
+        if (is_null($commander)) {
+            $commander = $this->commander;
         }
 
-        throw new InvalidArgumentException;
+        if (!array_key_exists($commander, self::$commanders)) {
+            throw new InvalidArgumentException;
+        }
+
+        $commands = self::$commanders[$commander];
+
+        unset(self::$commanders[$commander]);
+        if (array_key_exists($commander, self::$resolvers)) {
+            unset(self::$resolvers[$commander]);
+        }
+
+        return $commands;
     }
 }
+ 

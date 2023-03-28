@@ -1,9 +1,13 @@
 <?php
 
-assert(file_exists($_SERVER['APP_PATH'].'/vendor/autoload.php'));
-require_once($_SERVER['APP_PATH'].'/vendor/autoload.php');
+assert(file_exists($_SERVER['APP_PATH'] ?? '.'.'/vendor/autoload.php'));
+require_once($_SERVER['APP_PATH'] ?? '.'.'/vendor/autoload.php');
 
 use Ruigweb\Commander\Coordinator;
+
+if (empty($argv)) {
+    $argv = [];
+}
 
 // No need to know the file location
 array_shift($argv);
@@ -18,7 +22,7 @@ $coordinator = null;
 if (!empty($_SERVER['COMMANDER_REGISTER'])) {
     assert(file_exists($_SERVER['COMMANDER_REGISTER']));
     $coordinator = require_once($_SERVER['COMMANDER_REGISTER']);
-} elseif (is_file($_SERVER['APP_PATH'].'./commander.php')) {
+} elseif (is_file($_SERVER['APP_PATH'] ?? '.'.'./commander.php')) {
     $coordinator = require_once($_SERVER['APP_PATH'].'./commander.php');
 }
 
@@ -27,4 +31,6 @@ if ($coordinator instanceof Coordinator === false) {
 }
 
 $command = array_shift($argv);
-$result  = $coordinator->run($command, ...$args);
+if ($command) {
+    $result  = $coordinator->run($command, ...$args);
+}

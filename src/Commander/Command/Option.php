@@ -9,8 +9,11 @@ use Ruigweb\Commander\Command\Type;
 
 class Option extends Argument
 {
+    protected bool $allow_abbr = true;
+
     /**
      * (new Option('force')->as(Option::BOOLEAN, false))
+     * keeper build --force
      */
 
     public function __get(string $name)
@@ -22,14 +25,30 @@ class Option extends Argument
         throw new InvalidArgumentException;
     }
 
+    public function as(Type $type, $default = null)
+    {
+        parent::as($type, $default);
+        if (Type::from($this->type->value) !== Type::BOOLEAN) {
+            $this->short(false);
+        }
+
+        return $this;
+    }
+
+    public function short($allow = true)
+    {
+        $this->allow_abbr = $allow;
+        return $this;
+    }
+
     public function matches(string $arg) : bool
     {
         if (mb_substr($arg, 0, 1) === '-') {
             if (mb_substr($arg, 0, 2) === '--') {
-                return mb_substr($arg, 2, (($pos = mb_strpos($arg, '=')) !== false) ? $pos : null) === $this->name;
+                return mb_substr($arg, 2, (($pos = (mb_strpos($arg, '=') - 2)) !== false) ? $pos : null) === $this->name;
             }
 
-            return mb_substr($arg, 1, 1) === $this->abbreviation;
+            return $this->allow_abbr && mb_substr($arg, 1, 1) === $this->abbreviation;
         }
 
         return false;
@@ -38,30 +57,16 @@ class Option extends Argument
     public function parse(string $arg) : Option
     {
         if (mb_substr($arg, 0, 2) === '--') {
-            if (preg_match('/$--[a-zA-Z]+=/', $arg)) {
-                $arg = preg_replace('/$--[a-zA-Z]+=/', '', $arg);
-            } else {
-                $arg = true;
+            if (preg_match('/^--[a-zA-Z]+=/', $arg)) {
+                $arg = preg_replace('/^--[a-zA-Z]+=/', '', $arg);
             }
+        } elseif (preg_match('/^-[a-zA-Z]{1}$/', $arg)) {
+            $arg = 'true';
         } else {
-            $arg = true;
+            throw new InvalidArgumentException;
         }
-
-        return parent::parse($arg);
-    }
-
-    public function default()
-    {
-
-    }
-
-    public function value()
-    {
-
-    }
-
-    public function type()
-    {
-
+        
+        $this->value = $this->type->format($arg, $this->default);
+        return $this;
     }
 }

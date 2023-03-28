@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ruigweb\Commander;
 
+use Closure;
 use InvalidArgumentException;
 use Ruigweb\Commander\Argv;
 
@@ -13,6 +14,7 @@ class Command {
     protected ?string $description;
     protected Argv $arguments;
     protected $handler = null;
+    protected $parsed = [];
 
     public function __construct(string $name, Argv $arguments, string $description = null, callable $handler = null) {
         $this->name = $name;
@@ -51,6 +53,11 @@ class Command {
         return $this->description;
     }
 
+    public function argv() : Argv
+    {
+        return $this->arguments;
+    }
+
     public function usage(bool $short = true) : string
     {
         // usage: {command} [-h] [{--option}] {arguments}
@@ -71,21 +78,38 @@ class Command {
      * Take list of provided command line arguments,
      * and parse to values for Argv of command 
      */
-    public function take(...$args)
+    public function take(...$args) : Command
     {
         foreach ($args as $arg) {
-            $this->arguments->each(function($argument) use($arg) {
-                if ($argument->matches($arg)) {
+            $this->arguments->filter(function($argument) {
+                return !in_array($argument->name(), $this->parsed);
+            })->each(function($argument) use($arg) {
+                if ($argument->matches($arg) && !in_array($argument->name(), $this->parsed())) {
                     $argument->parse($arg);
+                    $this->parsed[] = $argument->name();
+                    
+                    return false;
                 }
             });
         }
+
+        return $this;
     }
 
-    public function run(Argv $arguments = null) 
+    public function parsed() : array
+    {
+        return $this->parsed;
+    }
+
+    public function run(Argv $arguments = null) : ?string
     {
         if (empty($this->handler)) {
             throw new InvalidArgumentException;
         }
+
+        $handler = Closure::fromCallable($this->handler);
+        $output  = $handler($arguments ?: $this->arguments);
+
+        return $output;
     }
 }
