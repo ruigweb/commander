@@ -1,7 +1,7 @@
+#!/usr/bin/env php
 <?php
 
-assert(file_exists($_SERVER['APP_PATH'] ?? '.'.'/vendor/autoload.php'));
-require_once($_SERVER['APP_PATH'] ?? '.'.'/vendor/autoload.php');
+include($_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php');
 
 use Ruigweb\Commander\Coordinator;
 
@@ -19,18 +19,25 @@ array_shift($argv);
 // - Building a new coordinator, based on the env variable COMMANDER_COORDINATOR,
 // which is registered somewhere before this file is loaded / required
 $coordinator = null;
+if (empty($_SERVER['APP_PATH']) && mb_strpos(__DIR__, '/vendor') !== false) {
+    // Define APP_PATH
+};
+
+$_SERVER['APP_PATH'] = '/home/david/Projects/Ruigweb/playground';
+
 if (!empty($_SERVER['COMMANDER_REGISTER'])) {
     assert(file_exists($_SERVER['COMMANDER_REGISTER']));
     $coordinator = require_once($_SERVER['COMMANDER_REGISTER']);
-} elseif (is_file($_SERVER['APP_PATH'] ?? '.'.'./commander.php')) {
-    $coordinator = require_once($_SERVER['APP_PATH'].'./commander.php');
+} elseif (!empty($_SERVER['APP_PATH']) && is_file($_SERVER['APP_PATH'].'/commander.php')) {
+    $coordinator = require_once($_SERVER['APP_PATH'].'/commander.php');
 }
 
 if ($coordinator instanceof Coordinator === false) {
     $coordinator = new Coordinator($_SERVER['COMMANDER_COORDINATOR'] ?? Coordinator::DEFAULT);
 }
 
-$command = array_shift($argv);
+
+$command = $coordinator->ingest($argv);
 if ($command) {
-    $result  = $coordinator->run($command, ...$args);
+    $result  = $command->run();
 }

@@ -4,25 +4,38 @@ declare(strict_types=1);
 
 namespace Ruigweb\Commander;
 
-use Closure;
 use ArrayObject;
 use Exception;
 use InvalidArgumentException;
 use Ruigweb\Commander\Command\Argument;
 use Ruigweb\Commander\Command\Option;
+use Ruigweb\Commander\Command;
 
 class Argv extends ArrayObject
 {
     public function __construct(...$argv)
     {
-        foreach ($argv as $var) {
-            $this->validate($var);
+        if (is_array($argv[0] ?? null)) {
+            $argv = $argv[0];
+        }
+
+        foreach ($argv as $key => $var) {
+            $this->validate($var, $argv, $key);
         }
 
         parent::__construct($argv);
     }
 
-    public function each(Closure $callback) 
+    public function first(callable $callback = null, $default = null)
+    {
+        if (is_null($callback)) {
+            foreach ($this as $argument) {
+                return $argument;
+            }
+        }
+    }
+
+    public function each(callable $callback)
     {
         foreach ($this as $key => $argument) {
             if ($callback($argument, $key) === false) {
@@ -33,7 +46,7 @@ class Argv extends ArrayObject
         return $this;
     }
 
-    public function filter(Closure $callback)
+    public function filter(callable $callback)
     {
         $arguments = [];
         foreach ($this as $key => $argument) {
@@ -45,10 +58,12 @@ class Argv extends ArrayObject
         return new Argv(...$arguments);
     }
 
-    public function get(string $name) : Argument
+    public function get(string | int $search) : Argument | Command
     {
-        foreach ($this as $argument) {
-            if ($argument->name() === $name) {
+        foreach ($this as $key => $argument) {
+            if (is_int($search) && $key === $search) {
+                return $argument;
+            } else if ($argument->name() === $search) {
                 return $argument;
             }
         }
@@ -100,10 +115,16 @@ class Argv extends ArrayObject
         return $this->get($key);
     }
 
-    protected function validate($value): void
+    protected function validate($value, array $argv, int $key): void
     {
-        if (!$value instanceof Option && !$value instanceof Argument) {
+        if (!$value instanceof Option && !$value instanceof Argument && !$value instanceof Command) {
             throw new InvalidArgumentException;
+        }
+
+        if ($value instanceof Command && count(array_filter(array_slice($argv, 0, $key), function($argument) {
+            return !$argument instanceof Command;
+        }))) {
+            throw new InvalidArgumentException('Subcommands should always be provided before positional arguments and options');
         }
     }
 }

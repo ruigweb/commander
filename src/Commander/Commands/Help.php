@@ -15,17 +15,15 @@ class Help extends Command
     public function __construct(Command $command = null)
     {
         parent::__construct('help', new Argv);
-        $this->on($command);
+        if ($command) {
+            $this->on($command);
+        }
     }
 
-    public static function make(Command $command)
-    {
-
-    }
-
-    public function on(Command $command)
+    public function on(Command $command) : Help
     {
         $this->command = $command;
+        return $this;
     }
 
     public function run(Argv $argv = null) : ?string
@@ -33,9 +31,9 @@ class Help extends Command
         if (empty($this->command)) {
             throw new InvalidArgumentException;
         }
-        
-        $output = $this->command->usage();
 
+        $output = $this->command->usage();
+        var_dump($output);
         return $output;
     }
 }

@@ -13,10 +13,14 @@ class Argument
     protected $value = null;
     protected Type $type;
     protected $default = null;
-    
-    public function __construct(string $name, Type $type = Type::STRING, $default = null)
+
+    public function __construct(string $name, Type | string $type = Type::STRING, $default = null)
     {
         $this->setName($name);
+        if (is_string($type)) {
+            $type = Type::from($type);
+        }
+
         $this->as($type, $default);
     }
 
@@ -52,6 +56,17 @@ class Argument
     {
         $this->help = $help;
         return $this;
+    }
+
+    public function usage() : string
+    {
+        $default = $this->type->toString($this->default);
+        $usage = $this->name().' ('.$this->type->value.(($default) ? ':'.$default : '').')';
+        if ($help = $this->help) {
+            $usage .= '   '.$help;
+        }
+
+        return $usage;
     }
 
     public function __invoke(string $arg)

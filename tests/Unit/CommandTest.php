@@ -15,13 +15,16 @@ it('provides name of command', function() {
 });
 
 it('provides desciption of command', function() {
-    $command = new Command('foobar', new Argv, 'foobar command');
+    $command = new Command('foobar', new Argv, null, 'foobar command');
     expect($command->description())->toBe('foobar command');
 });
 
 it('provides output on usage of command', function() {
-    $command = new Command('foobar', new Argv);
-    expect($command->usage())->toBe('usage of foobar');
+    $command = new Command('foobar', new Argv(
+        (new Argument('test'))->help('this')
+    ));
+    expect($command->usage())->toContain('foobar');
+    expect($command->usage())->toContain('test');
 });
 
 it('takes a list of arguments', function() {

@@ -177,7 +177,7 @@ it('throws InvalidArgumentException when resolver is not present to get command 
 
 it('can run from command provided as string', function() {
     $coordinatorMock = Mockery::mock(Coordinator::class)->makePartial();
-    $coordinatorMock->shouldReceive('get')->once()->andReturn(new Command('foobar', new Argv, null, function() {}));
+    $coordinatorMock->shouldReceive('get')->once()->andReturn(new Command('foobar', new Argv, function() {}, null));
 
     $coordinatorMock->on(Coordinator::DEFAULT);
     $coordinatorMock->run('FooBarCommand');

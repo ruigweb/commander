@@ -35,8 +35,23 @@ class Option extends Argument
         return $this;
     }
 
+    public function usage() : string
+    {
+        $default = $this->type->toString($this->default);
+        $usage = '--'.$this->name().($this->allow_abbr ? ' -'.$this->abbreviation : '').' ('.$this->type->value.(($default) ? ':'.$default : '').')';
+        if ($help = $this->help) {
+            $usage .= '   '.$help;
+        }
+
+        return $usage;
+    }
+
     public function short($allow = true)
     {
+        if ($allow === true && Type::from($this->type->value) === Type::BOOLEAN) {
+            throw new InvalidArgumentException;
+        }
+
         $this->allow_abbr = $allow;
         return $this;
     }
@@ -65,7 +80,7 @@ class Option extends Argument
         } else {
             throw new InvalidArgumentException;
         }
-        
+
         $this->value = $this->type->format($arg, $this->default);
         return $this;
     }

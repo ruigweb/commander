@@ -19,6 +19,12 @@ it('defaults the type to string', function() {
     expect($argument->type())->toBeInstanceOf(Type::class);
 });
 
+it('parses provided Type as string to Type', function() {
+    $argument = new Argument('foo', 'string');
+
+    expect($argument->type())->toBeInstanceOf(Type::class);
+});
+
 it('parses argument to default when no value is defined', function() {
     $argument = new Argument('foo', Type::STRING, 'bar');
 
@@ -32,7 +38,7 @@ it('parses argument type string to string', function() {
     expect((string) $argument)->toEqual('bar');
 });
 
-it('parses argument type boolean to string', function() {   
+it('parses argument type boolean to string', function() {
     $argument = new Argument('foo', Type::BOOLEAN);
     $argument->parse('true');
 

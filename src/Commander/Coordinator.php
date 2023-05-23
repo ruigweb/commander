@@ -49,12 +49,20 @@ class Coordinator
         return $this;
     }
 
-    public function register(Command $command) : Coordinator
+    public function register(...$args) : Coordinator
     {
-        if (!in_array($command->name(), $this->list())) {
-            array_push(self::$commanders[$this->commander], $command);
+        if (count($args) > 1) {
+            $command = new Command($args[0], $args[1] ?: null, $args[2] = null, $args[3] = null);
         } else {
-            throw new InvalidArgumentException;
+            $command = $args[0];
+        }
+
+        if ($command instanceof Command) {
+            if (!in_array($command->name(), $this->list())) {
+                array_push(self::$commanders[$this->commander], $command);
+            } else {
+                throw new InvalidArgumentException();
+            }
         }
 
         return $this;
@@ -74,41 +82,60 @@ class Coordinator
     public function ingest(array $argv = []) : Command
     {
         $command = null;
-        array_shift($argv);
-        if (count($argv) > 0) {
-            // /$--?h(elp)?^/
-            if ($argv[0] === '-h' || $argv[0] === '--help') {
-                $command = $this->help();
-            }
 
-            if (count(self::$commanders[$this->commander]) === 0) {
-                if (array_key_exists($this->commander, $this->resolvers())) {
-                    // resolve the commander itself to a command
-                    $command = $this->getCommandFromResolver($this->commander);
-                }
+        if (count($argv) > 0) {
+            if (count($argv) === 1 && ($argv[0] === '-h' || $argv[0] === '--help')) {
+                $command = $this->help();
             } else {
                 if ($this->exists($argv[0])) {
                     $command = $this->get($argv[0]);
+                } elseif (count(self::$commanders[$this->commander]) === 0) {
+                    if (array_key_exists($this->commander, $this->resolvers())) {
+                        // resolve the commander itself to a command
+                        $command = $this->getCommandFromResolver($this->commander);
+                    }
                 }
             }
         } elseif (array_key_exists($this->commander, $this->resolvers())) {
             // resolve the commander itself to a command
             $command = $this->getCommandFromResolver($this->commander);
         }
-        
+
         if ($command instanceof Command) {
-            array_shift($argv);
-            $command->take(...$argv);
+            // Keep looping untill no subcommand through argv[0] is found
+            while (1 == 1) {
+                array_shift($argv);
+
+                if (($argv[0] ?? null) === '--help' || ($argv[0] ?? null) === '-h') {
+                    $command = $this->help($command);
+                }
+
+                // Command will parse provided argv
+                $command->take(...$argv);
+
+                $parsed = $command->parsed();
+                // Take a look to see if first provided argument is actually a subcommand
+                if (count($parsed) > 0) {
+                    $argument = $command->argv()->first();
+                    if ($argument->name() == $parsed[0] && $argument instanceof Command) {
+                        $command = $argument;
+                        continue;
+                    }
+                }
+
+                break;
+            }
+
             return $command;
         }
-        
+
         throw new InvalidArgumentException;
     }
 
     protected function getCommandFromResolver(string $commander) : Command
     {
         if (!empty(self::$resolvers[$commander])) {
-            return new Command($this->commander.':RESOLVER', self::$resolvers[$this->commander]['argv'], 'Resolver of '.$this->commander.' Commander', self::$resolvers[$this->commander]['handler']);
+            return new Command($this->commander.':RESOLVER', self::$resolvers[$this->commander]['argv'], self::$resolvers[$this->commander]['handler'], 'Resolver of '.$this->commander.' Commander');
         }
 
         throw new InvalidArgumentException;
@@ -134,19 +161,25 @@ class Coordinator
         return array_column(self::$commanders[$this->commander], 'name');
     }
 
-    public function help(string $command = null) : ?Help
+    public function help(string | Command $command = null) : ?Help
     {
         if (!empty($command)) {
-            if ($this->exists($command)) {
-                return (new Help)->on($this->get($command));
+            if (is_string($command)) {
+                if ($this->exists($command)) {
+                    $command = $this->get($command);
+                } else {
+                    throw new InvalidArgumentException;
+                }
             }
+
+            return (new Help)->on($command);
         } else {
             $argv = new Argv;
             foreach ($this->all() as $command) {
                 (new Argument($command->name()))->help($command->usage(true));
             }
-            
-            return new Help(new Command('Commander', $argv));
+
+            return new Help(new Command('commander', $argv));
         }
 
         return null;
@@ -192,4 +225,3 @@ class Coordinator
         return $commands;
     }
 }
- 
