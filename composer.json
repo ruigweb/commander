@@ -9,7 +9,8 @@
     },
     "require-dev": {
         "pestphp/pest": "^1.22",
-        "pestphp/pest-plugin-mock": "^1.0"
+        "pestphp/pest-plugin-mock": "^1.0",
+        "php-mock/php-mock-mockery": "^1.4"
     },
     "bin": ["bin/instruct"],
     "autoload": {

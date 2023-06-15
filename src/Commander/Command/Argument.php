@@ -26,7 +26,7 @@ class Argument
 
     protected function setName(string $name) : Argument
     {
-        if (preg_matcH('/^[a-zA-Z0-9]+[a-zA-Z\-_0-9]+[a-zA-Z0-9]+$/', $name)) {
+        if (preg_match('/^[a-zA-Z0-9]+[a-zA-Z\-_0-9]+[a-zA-Z0-9]+$/', $name)) {
             $this->name = $name;
             return $this;
         }
@@ -69,14 +69,20 @@ class Argument
         return $usage;
     }
 
-    public function __invoke(string $arg)
-    {
-
-    }
-
     public function parse(string $arg) : Argument
     {
         $this->value = $this->type->format($arg, $this->default);
+        return $this;
+    }
+
+    /**
+     * Use with caution, will just set value regardless the value
+     * Should not be used in combination with user input,
+     * always use parse() with user input
+     */
+    public function set(mixed $value) : Argument
+    {
+        $this->value = $value;
         return $this;
     }
 
@@ -87,7 +93,7 @@ class Argument
 
     public function value()
     {
-        return $this->value ?: $this->default;
+        return !is_null($this->value) ? $this->value : $this->default;
     }
 
     public function __toString() : string

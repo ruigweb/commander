@@ -3,46 +3,45 @@
 use Ruigweb\Commander\Command\Option;
 use Ruigweb\Commander\Command\Type;
 
-it('construct a new option', function() {
+it('construct a new option', function () {
     $option = new Option('foo');
 
     expect($option->name())->toEqual('foo');
 });
 
-it('return abbrevation of option', function() {
+it('return abbrevation of option', function () {
     $option = new Option('foo');
 
     expect($option->abbr)->toEqual('f');
     expect($option->abbreviation)->toEqual('f');
 });
 
-it('throws a InvalidArgumentException when invalid property is requested', function() {
+it('throws a InvalidArgumentException when invalid property is requested', function () {
     $option = new Option('foo');
     $option->bar;
-
 })->throws(InvalidArgumentException::class);
 
-it('matches a provided argument by name', function() {
+it('matches a provided argument by name', function () {
     $option = new Option('foo');
     expect($option->matches('--foo=bar'))->toBeTrue();
 });
 
-it('does not match without = sign', function() {
+it('does not match without = sign', function () {
     $option = new Option('foo');
     expect($option->matches('--foo'))->toBeFalse();
 });
 
-it('does match empty option', function() {
+it('does match empty option', function () {
     $option = new Option('foo');
     expect($option->matches('--foo='))->toBeTrue();
 });
 
-it('does match abbreviated boolean option', function() {
+it('does match abbreviated boolean option', function () {
     $option = new Option('bar', Type::BOOLEAN);
     expect($option->matches('-b'))->toBeTrue();
 });
 
-it('does not match abbreviated option for type other then boolean', function() {
+it('does not match abbreviated option for type other then boolean', function () {
     $option = new Option('bar', Type::STRING);
     expect($option->matches('-b'))->toBeFalse();
 
@@ -50,24 +49,29 @@ it('does not match abbreviated option for type other then boolean', function() {
     expect($option->matches('-b'))->toBeFalse();
 });
 
-it('does not match abbreviated option when short is not allowed', function() {
+it('does not match abbreviated option when short is not allowed', function () {
     $option = new Option('foo');
     $option->short(false);
     expect($option->matches('-f'))->toBeFalse();
 });
 
-it('does not match arguments which are not prefixed with a -', function() {
+it('throws a InvalidArgumentException when defining abbreviated option when type is not boolean', function () {
+    $option = new Option('foo', 'integer');
+    $option->short(true);
+})->throws(InvalidArgumentException::class);
+
+it('does not match arguments which are not prefixed with a -', function () {
     $option = new Option('foo');
     expect($option->matches('foo=bar'))->toBeFalse();
 });
 
-it('parses provided string option', function() {
+it('parses provided string option', function () {
     $option = new Option('foo', Type::STRING);
     $option->parse('--foo=bar');
     expect($option->value())->toEqual('bar');
 });
 
-it('parses provided boolean option', function() {
+it('parses provided boolean option', function () {
     $option = new Option('foo', Type::BOOLEAN);
     $option->parse('--foo=true');
     expect($option->value())->toEqual(true);
@@ -88,7 +92,7 @@ it('parses provided boolean option', function() {
     expect($option->value())->toEqual(false);
 });
 
-it('parses provided abbreviated boolean option', function() {
+it('parses provided abbreviated boolean option', function () {
     $option = new Option('foo', Type::BOOLEAN);
     $option->parse('-f');
 
@@ -99,7 +103,7 @@ it('parses provided abbreviated boolean option', function() {
     expect($option->value())->toEqual(false);
 });
 
-it('parses provided integer option', function() {
+it('parses provided integer option', function () {
     $option = new Option('foo', Type::INTEGER);
     $option->parse('--f=100');
 
@@ -112,18 +116,35 @@ it('parses provided integer option', function() {
     expect($option->value())->toEqual(80);
 });
 
-it('parses empty option to default value', function() {
+it('parses empty option to default value', function () {
     $option = new Option('foo', Type::STRING, 'bar');
     $option->parse('--foo=');
     expect($option->value())->toEqual('bar');
 });
 
-it('throws Exception when no default is defined', function() {
+it('throws Exception when no default is defined', function () {
     $option = new Option('foo', Type::INTEGER);
     $option->parse('--f=');
 })->throws(InvalidArgumentException::class);
 
-it('throws Exception when no valid arg is provided', function() {
+it('throws Exception when no valid arg is provided', function () {
     $option = new Option('foo', Type::INTEGER);
     $option->parse('foo');
 })->throws(InvalidArgumentException::class);
+
+it('provides output on usage of option', function () {
+    $option = new Option('foo', Type::BOOLEAN, true);
+    
+    expect($option->usage())->toContain('--foo -f');
+    expect($option->usage())->toContain('(boolean:true)');
+});
+
+
+it('provides output on usage of option with help', function () {
+    $option = new Option('foo', Type::BOOLEAN, true);
+    $option->help('bar');
+    
+    expect($option->usage())->toContain('--foo -f');
+    expect($option->usage())->toContain('(boolean:true)');
+    expect($option->usage())->toContain('bar');
+});

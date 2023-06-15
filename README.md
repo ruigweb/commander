@@ -1,5 +1,6 @@
 # commander
-Ruigweb Commander
+🫡 Take command!
+
 
 ```php
 command('Make it awesome', null, function() {
@@ -12,17 +13,27 @@ Commander provides a framework independent way to create CLI commands for your P
 What happens when one of your commands gets executed? Anything you can come up with!
 Your application, your CLI commands.
 
-So, let's start simple
+**Commander** can be found on Packagist, its recommended to install **Commander** through composer by running the following command:
+
+```bash
+$ php composer require ruigweb/commander
+```
+
+Now create a empty `commander.php` file in the root directory of your application.
+
+So, everything is installed? 
+Let's start simple
+
 ```php
 # ./commander.php
 
 return [
-    command('March', null, fn() => 'Marching'),
-    command('Halt', null, fn() => 'At Ease')
+    command('March', null, fn() => echo 'Marching'),
+    command('Halt', null, fn() => echo 'At Ease')
 ];
 ```
 
-Sure, now we have to commands, so how can we use them?
+Sure, now we have to commands, so how can we use them? 🤔
 
 ```bash
 $ php vendor/bin/instruct March
@@ -31,22 +42,21 @@ $ Marching
 
 Simple, right? Just use `vendor/bin/instruct`, provided by Commander, to execute your commands.
 
-Assuming your own awesome command will be a little more complicated, we will take it one step further.
+Assuming your own awesome commands will be a little more complicated 😏, we will take it one step further.
 
 ```php
-
 return [
     command('March', argv(
         argument('direction'),
-    ), fn() => 'Marching'),
+    ), fn() => echo 'Marching'),
     command('Halt', argv(
         option('in', 'int', '0'),
-    ), fn() => 'At Ease')
+    ), fn() => echo 'At Ease')
 ];
 ```
 
 We now provide some arguments for our commands, which can be provided when executing a command. These arguments can be *positional arguments*, or *optional arguments*.
-Besides of the name for the argument, you can also define how the provided value should be parsed, and its default value.
+Besides of the name of the argument, you can also define how the provided value should be parsed, and its default value.
 Arguments can currently be parsed as a string (default), integer, and boolean.
 
 Well, thats all nice, but how to use those arguments?
@@ -87,6 +97,8 @@ $ At Ease in 5 minutes
 
 So these are the basics, but with a bit of imagination, the possibilities are endless.
 You are the magician, make it awesome!
+
+## Deepdive
 
 The following sections will describe the building blocks of Commander in more detail.
 
@@ -199,6 +211,70 @@ The current implementation does not provide any feedback on incorrectly used / p
 
 ## Subcommands
 
+Sometimes its really nice to structure your CLI commands in a way where it makes sense to use subcommands. For example having different command to manage a *User* model.
+
+```bash
+$ vendor/bin/instruct user create user51212@internet.com
+```
+
+```bash
+$ vendor/bin/instruct user update user51212@internet.com user51212_udpated@internet.com
+```
+
+In the two example aboven, we call two commands to first create a user and the second one updates a user. For simplicity the only data we *manage* here for the user is the emailaddress
+
+To create and register subcommands like these on the Coordinator, all you need to do is providing the (sub)command as the first argument(s) for the provided `Argv` instance.
+Say what? 🤔
+
+```php
+$userCommands = new Command('user', new Argv(
+    new Command('create', 
+        new Argv(
+            new Argument('email')
+        ),
+        function(Argv $argv) {
+            // Create a new user based on provided email address
+        }
+    ),
+    new Command('update', 
+        new Argv(
+            new Argument('email'),
+            new Argument('new_email')
+        ),
+        function(Argv $argv) {
+            // Update a existing user based on provided email and new email address
+        }
+    ),
+));
+```
+
+Subcommands can be created recursively, the sky is the limit ✨ 
+
 ## Single command
 
+Wait, what? We already discussed how commands work right? Yes, but what if your application is just one single CLI command?
+Well, there's an idea!
+In that case you simply provide your `Command` (or any callable) as a *resolvible* to your `Coordinator`.
+
+```php
+$coordinator = (new Coordinator)->resolve(
+    function(Argv $argv) {
+        echo 'This is awesome!';
+    }, 
+    new Argv(
+        new Option('reboot', 'bool')
+    )
+);
+```
+
+This *single* `Command` can now be used as follows
+
+```bash
+$ vendor/bin/instruct --reboot
+```
+
+Just be aware its one or the other, or a single command / resolver to run or registering Commands 🤷‍♂️
+
 ## Helpers
+
+To make your live a bit easier, some helpers are present to quickly create your Commands for example. All available helpers are simple *shortcuts* to their corresponding classes. The following helpers are available: `coordinator`, `command`, `argument`, `option`.

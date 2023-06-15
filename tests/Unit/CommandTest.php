@@ -3,31 +3,36 @@
 use Ruigweb\Commander\Argv;
 use Ruigweb\Commander\Command;
 use Ruigweb\Commander\Command\Argument;
+use Ruigweb\Commander\Command\Option;
 
-it('can construct a new command', function() {
+it('can construct a new command', function () {
     $command = new Command('foobar', new Argv);
     expect($command)->toBeInstanceOf(Command::class);
 });
 
-it('provides name of command', function() {
+it('provides name of command', function () {
     $command = new Command('foobar', new Argv);
     expect($command->name())->toBe('foobar');
 });
 
-it('provides desciption of command', function() {
+it('provides desciption of command', function () {
     $command = new Command('foobar', new Argv, null, 'foobar command');
     expect($command->description())->toBe('foobar command');
 });
 
-it('provides output on usage of command', function() {
+it('provides output on usage of command', function () {
     $command = new Command('foobar', new Argv(
-        (new Argument('test'))->help('this')
+        (new Argument('argument_test'))->help('this'),
+        (new Option('option_test'))->help('this')
     ));
+    
     expect($command->usage())->toContain('foobar');
-    expect($command->usage())->toContain('test');
+    expect($command->usage())->toContain('argument_test');
+    expect($command->usage())->toContain('option_test');
+    expect($command->usage())->toContain('this');
 });
 
-it('takes a list of arguments', function() {
+it('takes a list of arguments', function () {
     $command = new Command('foobar', new Argv(
         new Argument('argument-1'),
         new Argument('argument-2'),
@@ -40,7 +45,7 @@ it('takes a list of arguments', function() {
     expect($command->argv()->get('argument-2')->value())->toBe('this');
 });
 
-it('constructs a list of parsed arguments', function() {
+it('constructs a list of parsed arguments', function () {
     $command = new Command('foobar', new Argv(
         new Argument('argument-1'),
         new Argument('argument-2'),
@@ -55,7 +60,13 @@ it('constructs a list of parsed arguments', function() {
     expect($parsed)->toContain('argument-2');
 });
 
-it('throws InvalidArgumentException when no handler is defined on run', function() {
+it('throws InvalidArgumentException when no handler is defined on run', function () {
     $command = new Command('foobar', new Argv);
     $command->run();
 })->throws(InvalidArgumentException::class);
+
+it('matches name when provided', function () {
+    $command = new Command('foobar');
+    expect($command->matches('foobar'))->toBeTrue();
+    expect($command->matches('barfoo'))->toBeFalse();
+});

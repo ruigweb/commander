@@ -19,11 +19,11 @@ array_shift($argv);
 // - Building a new coordinator, based on the env variable COMMANDER_COORDINATOR,
 // which is registered somewhere before this file is loaded / required
 $coordinator = null;
-if (empty($_SERVER['APP_PATH']) && mb_strpos(__DIR__, '/vendor') !== false) {
-    // Define APP_PATH
+$app_path = $_SERVER['APP_PATH'] ?? null;
+if (empty($app_path) && mb_strpos(__DIR__, '/vendor') !== false) {
+    // Define app path
+    $app_path = strstr(__DIR__, '/vendor', true);
 };
-
-$_SERVER['APP_PATH'] = '/home/david/Projects/Ruigweb/playground';
 
 if (!empty($_SERVER['COMMANDER_REGISTER'])) {
     assert(file_exists($_SERVER['COMMANDER_REGISTER']));
@@ -33,9 +33,16 @@ if (!empty($_SERVER['COMMANDER_REGISTER'])) {
 }
 
 if ($coordinator instanceof Coordinator === false) {
-    $coordinator = new Coordinator($_SERVER['COMMANDER_COORDINATOR'] ?? Coordinator::DEFAULT);
-}
+    $commands = [];
+    if (is_array($coordinator)) {
+        $commands = $coordinator;
+    }
 
+    $coordinator = new Coordinator($_SERVER['COMMANDER_COORDINATOR'] ?? Coordinator::DEFAULT);
+    if (count($commands) > 0) {
+        $coordinator->register(...$commands);
+    }
+}
 
 $command = $coordinator->ingest($argv);
 if ($command) {

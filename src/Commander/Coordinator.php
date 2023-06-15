@@ -39,9 +39,12 @@ class Coordinator
         return self::$resolvers;
     }
 
-
     public function resolver(callable|Command $handler, Argv $argv = new Argv) : Coordinator
     {
+        if (!empty(self::$commanders[$this->commander])) {
+            throw new InvalidArgumentException;
+        }
+
         self::$resolvers[$this->commander] = [
             'handler' => $handler,
             'argv'    => $argv,
@@ -51,18 +54,30 @@ class Coordinator
 
     public function register(...$args) : Coordinator
     {
-        if (count($args) > 1) {
-            $command = new Command($args[0], $args[1] ?: null, $args[2] = null, $args[3] = null);
-        } else {
-            $command = $args[0];
+        if (!empty(self::$resolvers[$this->commander])) {
+            throw new InvalidArgumentException;
         }
 
-        if ($command instanceof Command) {
-            if (!in_array($command->name(), $this->list())) {
-                array_push(self::$commanders[$this->commander], $command);
+        $commands = [];
+        if (count($args) > 1) {
+            $commands[] = new Command($args[0], $args[1] ?: null, $args[2] = null, $args[3] = null);
+        } else {
+            if (is_array($args[0])) {
+                $commands = $args[0];
             } else {
-                throw new InvalidArgumentException();
+                $commands[] = $args[0];
             }
+        }
+
+        foreach ($commands as $command) {
+            if ($command instanceof Command) {
+                if (!in_array($command->name(), $this->list())) {
+                    array_push(self::$commanders[$this->commander], $command);
+                    continue;
+                }
+            }
+
+            throw new InvalidArgumentException;
         }
 
         return $this;
@@ -161,7 +176,7 @@ class Coordinator
         return array_column(self::$commanders[$this->commander], 'name');
     }
 
-    public function help(string | Command $command = null) : ?Help
+    public function help(string | Command $command = null) : Help
     {
         if (!empty($command)) {
             if (is_string($command)) {
@@ -181,8 +196,6 @@ class Coordinator
 
             return new Help(new Command('commander', $argv));
         }
-
-        return null;
     }
 
     public function get(string $command) : Command

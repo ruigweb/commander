@@ -26,6 +26,14 @@ class Argv extends ArrayObject
         parent::__construct($argv);
     }
 
+    public function __clone()
+    {
+        foreach ($this->getArrayCopy() as $key => $argument) {
+            parent::offsetUnset($key);
+            parent::offsetSet($key, clone $argument);
+        }
+    }
+
     public function first(callable $callback = null, $default = null)
     {
         if (is_null($callback)) {
@@ -58,23 +66,23 @@ class Argv extends ArrayObject
         return new Argv(...$arguments);
     }
 
-    public function get(string | int $search) : Argument | Command
+    public function get(string | int $search, mixed $default = null) : mixed
     {
         foreach ($this as $key => $argument) {
             if (is_int($search) && $key === $search) {
                 return $argument;
-            } else if ($argument->name() === $search) {
+            } elseif ($argument->name() === $search) {
                 return $argument;
             }
         }
 
-        throw new InvalidArgumentException;
+        return $default;
     }
 
     public function arguments() : array
     {
         $arguments = [];
-        $this->each(function($argument) use(&$arguments) {
+        $this->each(function ($argument) use (&$arguments) {
             if (get_class($argument) === Argument::class) {
                 $arguments[] = $argument;
             }
@@ -86,7 +94,7 @@ class Argv extends ArrayObject
     public function options() : array
     {
         $options = [];
-        $this->each(function($argument) use(&$options) {
+        $this->each(function ($argument) use (&$options) {
             if (get_class($argument) === Option::class) {
                 $options[] = $argument;
             }
@@ -121,7 +129,7 @@ class Argv extends ArrayObject
             throw new InvalidArgumentException;
         }
 
-        if ($value instanceof Command && count(array_filter(array_slice($argv, 0, $key), function($argument) {
+        if ($value instanceof Command && count(array_filter(array_slice($argv, 0, $key), function ($argument) {
             return !$argument instanceof Command;
         }))) {
             throw new InvalidArgumentException('Subcommands should always be provided before positional arguments and options');

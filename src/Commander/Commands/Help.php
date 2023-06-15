@@ -26,6 +26,11 @@ class Help extends Command
         return $this;
     }
 
+    public function origin() : Command
+    {
+        return $this->command;
+    }
+
     public function run(Argv $argv = null) : ?string
     {
         if (empty($this->command)) {

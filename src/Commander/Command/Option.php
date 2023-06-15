@@ -48,7 +48,7 @@ class Option extends Argument
 
     public function short($allow = true)
     {
-        if ($allow === true && Type::from($this->type->value) === Type::BOOLEAN) {
+        if ($allow === true && Type::from($this->type->value) !== Type::BOOLEAN) {
             throw new InvalidArgumentException;
         }
 
@@ -74,13 +74,16 @@ class Option extends Argument
         if (mb_substr($arg, 0, 2) === '--') {
             if (preg_match('/^--[a-zA-Z]+=/', $arg)) {
                 $arg = preg_replace('/^--[a-zA-Z]+=/', '', $arg);
+                if ($arg === '') {
+                    $arg = null;
+                }
             }
         } elseif (preg_match('/^-[a-zA-Z]{1}$/', $arg)) {
             $arg = 'true';
         } else {
             throw new InvalidArgumentException;
         }
-
+        
         $this->value = $this->type->format($arg, $this->default);
         return $this;
     }

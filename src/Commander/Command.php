@@ -7,16 +7,18 @@ namespace Ruigweb\Commander;
 use Closure;
 use InvalidArgumentException;
 use Ruigweb\Commander\Argv;
+use Ruigweb\Commander\Command\Argument;
 
-class Command {
-
+class Command
+{
     protected string $name;
     protected ?string $description;
     protected Argv $arguments;
     protected $handler = null;
     protected $parsed = [];
 
-    public function __construct(string $name, Argv $arguments = new Argv, callable $handler = null, string $description = null) {
+    public function __construct(string $name, Argv $arguments = new Argv, callable $handler = null, string $description = null)
+    {
         $this->name = $name;
         $this->description = $description;
         $this->arguments = $arguments;
@@ -139,11 +141,13 @@ class Command {
     public function take(...$args) : Command
     {
         foreach ($args as $arg) {
-            $this->arguments->filter(function($argument) {
+            $this->arguments->filter(function ($argument) {
                 return !in_array($argument->name(), $this->parsed);
-            })->each(function($argument) use($arg) {
+            })->each(function ($argument) use ($arg) {
                 if ($argument->matches($arg) && !in_array($argument->name(), $this->parsed())) {
-                    $argument->parse($arg);
+                    if ($argument instanceof Argument) {
+                        $argument->parse($arg);
+                    }
                     $this->parsed[] = $argument->name();
 
                     return false;
@@ -159,23 +163,19 @@ class Command {
         return $this->name() === $arg;
     }
 
-    public function parse(string $arg) : Command {
-        return $this;
-    }
-
     public function parsed() : array
     {
         return $this->parsed;
     }
 
-    public function run(Argv $arguments = null) : ?string
+    public function run(Argv $argv = null) : ?string
     {
         if (empty($this->handler)) {
             throw new InvalidArgumentException;
         }
 
         $handler = Closure::fromCallable($this->handler);
-        $output  = $handler($arguments ?: $this->arguments);
+        $output  = $handler($argv ?: $this->arguments);
 
         return $output;
     }

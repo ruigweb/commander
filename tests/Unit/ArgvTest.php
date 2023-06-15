@@ -5,7 +5,7 @@ use Ruigweb\Commander\Command;
 use Ruigweb\Commander\Command\Argument;
 use Ruigweb\Commander\Command\Option;
 
-it('throws InvalidArgumentException when retrieving non existing argument', function() {
+it('throws InvalidArgumentException when retrieving non existing argument', function () {
     $argv = new Argv(
         new Argument('bar'),
     );
@@ -13,14 +13,13 @@ it('throws InvalidArgumentException when retrieving non existing argument', func
     $argv->get('test');
 })->throws(InvalidArgumentException::class);
 
-it('validates provided arguments on construction', function() {
+it('validates provided arguments on construction', function () {
     $argv = new Argv(
         new stdClass
     );
-
 })->throws(InvalidArgumentException::class);
 
-it('returns a list of arguments in the argv', function() {
+it('returns a list of arguments in the argv', function () {
     $argv = new Argv(
         new Argument('bar'),
         new Option('foo'),
@@ -33,7 +32,7 @@ it('returns a list of arguments in the argv', function() {
     expect($arguments[1]::class)->toEqual(Argument::class);
 });
 
-it('return a list of options in the argv', function() {
+it('return a list of options in the argv', function () {
     $argv = new Argv(
         new Argument('bar'),
         new Option('foo'),
@@ -45,7 +44,7 @@ it('return a list of options in the argv', function() {
     expect($arguments[0]::class)->toEqual(Option::class);
 });
 
-it('accepts arguments, options and commands', function() {
+it('accepts arguments, options and commands', function () {
     $argv = new Argv(
         new Command('baz'),
         new Argument('foo'),
@@ -56,7 +55,7 @@ it('accepts arguments, options and commands', function() {
     expect($argv[0])->toBeInstanceOf(Command::class);
 });
 
-it('parses array of argument, options and commands', function() {
+it('parses array of argument, options and commands', function () {
     $argv = new Argv([
         new Command('baz'),
         new Argument('foo'),
@@ -67,14 +66,14 @@ it('parses array of argument, options and commands', function() {
     expect($argv[0])->toBeInstanceOf(Command::class);
 });
 
-it('throws a Exception when Command is not provided before arguments and options' , function() {
+it('throws a Exception when Command is not provided before arguments and options', function () {
     $argv = new Argv(
         new Argument('foo'),
         new Command('baz'),
     );
 })->throws(InvalidArgumentException::class);
 
-it('throws a Exception when trying to append a argument', function() {
+it('throws a Exception when trying to append a argument', function () {
     $argv = new Argv(
         new Argument('bar'),
     );
@@ -82,7 +81,7 @@ it('throws a Exception when trying to append a argument', function() {
     $argv->append(new Option('foo'));
 })->throws(Exception::class);
 
-it('throws a Exception when trying to offsetSet a argument', function() {
+it('throws a Exception when trying to offsetSet a argument', function () {
     $argv = new Argv(
         new Argument('bar'),
     );
@@ -90,7 +89,7 @@ it('throws a Exception when trying to offsetSet a argument', function() {
     $argv[] = new Option('foo');
 })->throws(Exception::class);
 
-it('throws a Exception when trying to offsetUnset a argument', function() {
+it('throws a Exception when trying to offsetUnset a argument', function () {
     $argv = new Argv(
         new Argument('bar'),
     );
@@ -98,11 +97,33 @@ it('throws a Exception when trying to offsetUnset a argument', function() {
     unset($argv[0]);
 })->throws(Exception::class);
 
-it('returns a argument through array access', function() {
+it('returns a argument through array access', function () {
     $argv = new Argv(
         new Argument('bar'),
     );
 
     expect($argv['bar'])->toBeInstanceOf(Argument::class);
     expect($argv['bar']->name())->toEqual('bar');
+});
+
+it('returns first argument', function () {
+    $argv = new Argv(
+        new Argument('foo'),
+        new Argument('bar'),
+        new Option('baz'),
+    );
+
+    expect($argv->first())->toBeInstanceOf(Argument::class);
+    expect($argv->first()->name())->toEqual('foo');
+});
+
+it('create new (cloned) arguments in argv instance when cloning', function () {
+    $arg = new Argument('foo');
+    $opt = new Option('bar');
+
+    $argv = new Argv($arg, $opt);
+    $cloned = clone $argv;
+
+    expect($cloned['foo'])->not->toBe($arg);
+    expect($cloned['bar'])->not->toBe($opt);
 });
