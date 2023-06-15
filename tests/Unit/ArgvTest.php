@@ -5,13 +5,14 @@ use Ruigweb\Commander\Command;
 use Ruigweb\Commander\Command\Argument;
 use Ruigweb\Commander\Command\Option;
 
-it('throws InvalidArgumentException when retrieving non existing argument', function () {
+it('return default when requesting non existing argument', function () {
     $argv = new Argv(
         new Argument('bar'),
     );
 
-    $argv->get('test');
-})->throws(InvalidArgumentException::class);
+    expect($argv->get('test'))->toBeNull();
+    expect($argv->get('test', 'foo'))->toEqual('foo');
+});
 
 it('validates provided arguments on construction', function () {
     $argv = new Argv(

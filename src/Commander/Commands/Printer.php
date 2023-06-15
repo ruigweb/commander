@@ -136,7 +136,6 @@ class Printer extends Command
             $result .= $output;
             
             $fp = fopen('php://'.$argv->get('stream', $this->arguments['stream'])->value(), 'w');
-            var_dump(shell_exec($output));
             fwrite($fp, shell_exec($output));
             fclose($fp);
         }
