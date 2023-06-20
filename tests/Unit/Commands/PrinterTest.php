@@ -113,3 +113,76 @@ it('directly prints a message', function () {
 
     expect($printerMock->print('foo'))->toEqual('result');
 });
+
+it('prints done message', function () {
+    $printerMock = Mockery::mock(Printer::class, [])->makePartial();
+    $printerMock->shouldReceive('run')->once()->withArgs(function ($argv) {
+        return (bool) preg_match('/\['.Printer::DONE.'\]/', $argv['output']->value());
+    })->andReturn('foo');
+
+    $printerMock->done('foo');
+    $output = $printerMock->print();
+    expect($output)->toBe('foo');
+});
+
+it('prints info message', function () {
+    $printerMock = Mockery::mock(Printer::class, [])->makePartial();
+    $printerMock->shouldReceive('run')->once()->withArgs(function ($argv) {
+        return (bool) preg_match('/\['.Printer::INFO.'\]/', $argv['output']->value());
+    })->andReturn('foo');
+
+    $printerMock->info('foo');
+    $output = $printerMock->print();
+    expect($output)->toBe('foo');
+});
+
+it('prints debug message', function () {
+    $printerMock = Mockery::mock(Printer::class, [])->makePartial();
+    $printerMock->shouldReceive('run')->once()->withArgs(function ($argv) {
+        return (bool) preg_match('/\['.Printer::DEBUG.'\]/', $argv['output']->value());
+    })->andReturn('foo');
+
+    $printerMock->debug('foo');
+    $output = $printerMock->print();
+    expect($output)->toBe('foo');
+});
+
+it('provides warn wrapper method', function () {
+    $printerMock = Mockery::mock(Printer::class, [])->makePartial();
+    $printerMock->shouldReceive('warn')->once()->with('foo', true)->andReturn($printerMock);
+
+    $printerMock->warning('foo');
+    $printerMock->print();
+});
+
+it('prints warning message', function () {
+    $printerMock = Mockery::mock(Printer::class, [])->makePartial();
+    $printerMock->shouldReceive('run')->once()->withArgs(function ($argv) {
+        return (bool) preg_match('/\['.Printer::WARNING.'\]/', $argv['output']->value());
+    })->andReturn('foo');
+
+    $printerMock->warn('foo');
+    $output = $printerMock->print();
+    expect($output)->toBe('foo');
+});
+
+it('prints error message', function () {
+    $printerMock = Mockery::mock(Printer::class, [])->makePartial();
+    $printerMock->shouldReceive('run')->once()->withArgs(function ($argv) {
+        return (bool) preg_match('/\['.Printer::ERROR.'\]/', $argv['output']->value());
+    })->andReturn('foo');
+
+    $printerMock->error('foo');
+    $output = $printerMock->print();
+    expect($output)->toBe('foo');
+});
+
+it('prints message defined by level', function () {
+    $printerMock = Mockery::mock(Printer::class, [])->makePartial();
+    $printerMock->shouldReceive('run')->once()->withArgs(function ($argv) {
+        return (bool) preg_match('/\['.Printer::ERROR.'\]/', $argv['output']->value());
+    })->andReturn('foo');
+
+    $output = $printerMock->print('foo', Printer::ERROR);
+    expect($output)->toBe('foo');
+});

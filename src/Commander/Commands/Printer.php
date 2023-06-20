@@ -19,6 +19,12 @@ class Printer extends Command
     public const DEBUG   = 'debug';
     public const DONE    = 'done';
 
+    public const ERROR_COLOR = '31';
+    public const WARNING_COLOR = '33';
+    public const INFO_COLOR = '37';
+    public const DEBUG_COLOR = '90';
+    public const DONE_COLOR = '32';
+
     public function __construct()
     {
         parent::__construct('printer', new Argv(
@@ -39,7 +45,7 @@ class Printer extends Command
             $message = escapeshellcmd($message);
         }
 
-        $this->sheets[] = '\033[1;90m ❯ ['.Printer::DEBUG.']\033[0m \033[0;90m'.$message.'\033[0m';
+        $this->sheets[] = '\033[1;'.Printer::DEBUG_COLOR.'m ❯ ['.Printer::DEBUG.']\033[0m \033[0;'.Printer::DEBUG_COLOR.'m'.$message.'\033[0m';
 
         return $this;
     }
@@ -50,7 +56,7 @@ class Printer extends Command
             $message = escapeshellcmd($message);
         }
 
-        $this->sheets[] = '\033[1;37m ℹ ['.Printer::INFO.']\033[0m  \033[0;37m'.$message.'\033[0m';
+        $this->sheets[] = '\033[1;'.Printer::INFO_COLOR.'m ℹ ['.Printer::INFO.']\033[0m  \033[0;'.Printer::INFO_COLOR.'m'.$message.'\033[0m';
 
         return $this;
     }
@@ -61,7 +67,7 @@ class Printer extends Command
             $message = escapeshellcmd($message);
         }
 
-        $this->sheets[] = '\033[1;32m ✔️ ['.Printer::DONE.']\033[0m  \033[0;32m'.$message.'\033[0m';
+        $this->sheets[] = '\033[1;'.Printer::DONE_COLOR.'m ✓ ['.Printer::DONE.']\033[0m  \033[0;'.Printer::DONE_COLOR.'m'.$message.'\033[0m';
 
         return $this;
     }
@@ -77,7 +83,7 @@ class Printer extends Command
             $message = escapeshellcmd($message);
         }
 
-        $this->sheets[] = '\033[1;33m ✖ ['.Printer::WARNING.']\033[0m  \033[0;33m'.$message.'\033[0m';
+        $this->sheets[] = '\033[1;'.Printer::WARNING_COLOR.'m ✖ ['.Printer::WARNING.']\033[0m  \033[0;'.Printer::WARNING_COLOR.'m'.$message.'\033[0m';
 
         return $this;
     }
@@ -88,7 +94,7 @@ class Printer extends Command
             $message = escapeshellcmd($message);
         }
 
-        $this->sheets[] = '\033[1;31m ☢ ['.Printer::ERROR.']\033[0m \033[0;31m'.$message.'\033[0m';
+        $this->sheets[] = '\033[1;'.Printer::ERROR_COLOR.'m ☢ ['.Printer::ERROR.']\033[0m \033[0;'.Printer::ERROR_COLOR.'m'.$message.'\033[0m';
 
         return $this;
     }
