@@ -8,12 +8,20 @@
         "php": "^8.0.2"
     },
     "require-dev": {
+        "pestphp/pest": "^1.22",
+        "pestphp/pest-plugin-mock": "^1.0",
+        "php-mock/php-mock-mockery": "^1.4"
     },
-    "bin": ["bin/commander"],
+    "bin": ["bin/instruct"],
     "autoload": {
         "psr-4": {
             "Ruigweb\\Commander\\": "src/Commander"
         },
         "files": ["src/helpers.php"]
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     }
 }
