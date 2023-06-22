@@ -1,4 +1,8 @@
-# commander
+# Commander
+
+[![Test Coverage](https://raw.githubusercontent.com/ruigweb/commander/main/badge-coverage.svg)](https://packagist.org/packages/ruigweb/commander)
+[![Tests](https://github.com/ruigweb/commander/actions/workflows/unit-tests.yml/badge.svg)
+
 🫡 Take command!
 
 
