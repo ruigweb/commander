@@ -66,7 +66,7 @@ $ php vendor/bin/instruct March forward
 $ Marching
 
 $ php vendor/bin/instruct Halt --in=5
-
+$ At Ease
 ```
 
 So we provided arguments, but we aren't really using them... Thats were handlers will make sense. Handlers are callbacks which will be executed once a command gets executed. Commander basically provides a layer between the CLI and your application through the handlers you define. Next up for our example is creating some handlers to do something with the input. The simpelest form of handler is a  basic closure. In the background it will use the `Closure::fromCallable` functionality to execute your handlers.
