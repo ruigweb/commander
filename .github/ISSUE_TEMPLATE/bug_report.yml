@@ -2,7 +2,6 @@ name: Bug report
 description: Report something utterly broken
 title: "[BUG] Oops"
 labels: bug
-assignees: ''
 body:
   - type: markdown
     attributes:
