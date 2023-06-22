@@ -1,7 +1,7 @@
 # Commander
 
 [![Test Coverage](https://raw.githubusercontent.com/ruigweb/commander/main/badge-coverage.svg)](https://packagist.org/packages/ruigweb/commander)
-[![Tests](https://github.com/ruigweb/commander/actions/workflows/tests.yml/badge.svg)
+![Tests](https://github.com/ruigweb/commander/actions/workflows/tests.yml/badge.svg)
 ![Packagist Downloads (custom server)](https://img.shields.io/packagist/dt/ruigweb/commander)
 ![Packagist Version (custom server)](https://img.shields.io/packagist/v/ruigweb/commander)
 
